@@ -23,6 +23,7 @@ oauth = OAuth1(client_key,
             resource_owner_key=access_token,
             resource_owner_secret=access_token_secret)
 
+# For extra credit2
 # http://xpo6.com/list-of-english-stop-words/
 stopwords = ["a", "about", "above", "above", "across", "after",
                 "afterwards", "again", "against", "all", "almost",
@@ -83,6 +84,62 @@ stopwords = ["a", "about", "above", "above", "across", "after",
                 "whoever", "whole", "whom", "whose", "why", "will",
                 "with", "within", "without", "would", "yet", "you",
                 "your", "yours", "yourself", "yourselves", "the"]
+stopwords.append("rt")
+
+
+def find_top3_cooccurring_hashtag_and_10words(tweet_data, hashtag_to_ignore):
+    ''' Finds the hashtag that top 3 commonly co-occurs with the hashtag
+    queried in make_request_with_cache().
+
+    Parameters
+    ----------
+    tweet_data: dict
+        Twitter data as a dictionary for a specific query
+    hashtag_to_ignore: string
+        the same hashtag that is queried in make_request_with_cache()
+        (e.g. "#MarchMadness2021")
+
+    Returns
+    -------
+    None
+    print out the top3 common co-occuring hashtag if they are found and .
+    top10 most common co-occuring words.
+    '''
+    # TODO: Implement function
+    hashtag_list = []
+    words_list = []
+    for tweet in tweet_data['statuses']:
+        for hashtag_find in tweet['entities']['hashtags']:
+            hashtag_list.append(hashtag_find['text'].lower())
+        for word in tweet['text'].split(): # split text into word
+            # remove stopwords and RT
+            if word.lower() not in stopwords and\
+                word.lower()[0] != "#" and word.lower()[0] != "@":
+                words_list.append(word.lower())
+    c_hashtag = Counter(hashtag_list)
+    c_words = Counter(words_list)
+
+    # check whether there is cooccuring hashtag
+    if len(c_hashtag.most_common()) < 2:
+        print(f"There is no cooccuring hashtag with {hashtag_to_ignore}.")
+    else:
+        hashtag_list = []
+        for hashtag_co, _ in c_hashtag.most_common():
+            if hashtag_co == hashtag_to_ignore[1:].lower():
+                pass
+            else:
+                hashtag_list.append(hashtag_co)
+            if len(hashtag_list) == 3:
+                break
+        # Care when there are hashtags less than 3.
+        print(f"The top {len(hashtag_list)} most commonly co-occuring ",
+                f"hashtags with {hashtag_to_ignore}:")
+        for tag in hashtag_list:
+            print(tag)
+        print()
+        print("The top 10 most commonly occurring words in the 100 tweets:")
+        for pair in c_words.most_common()[:10]:
+            print(f"word:{pair[0]}, frequency:{pair[1]}")
 
 def test_oauth():
     ''' Helper function that returns an HTTP 200 OK response code and a
@@ -307,5 +364,6 @@ if __name__ == "__main__":
                 print("No results fetched, your hashtag may be nonsense.")
                 print("Please reconsider a hashtag.")
             else:
-                find_top3_common_cooccurring_hashtag(tweet_data, hashtag)
+                # find_top3_common_cooccurring_hashtag(tweet_data, hashtag)
+                find_top3_cooccurring_hashtag_and_10words(tweet_data, hashtag)
         print()
