@@ -23,6 +23,67 @@ oauth = OAuth1(client_key,
             resource_owner_key=access_token,
             resource_owner_secret=access_token_secret)
 
+# http://xpo6.com/list-of-english-stop-words/
+stopwords = ["a", "about", "above", "above", "across", "after",
+                "afterwards", "again", "against", "all", "almost",
+                "alone", "along", "already", "also", "although",
+                "always", "am", "among", "amongst", "amoungst",
+                "amount",  "an", "and", "another", "any", "anyhow",
+                "anyone", "anything", "anyway", "anywhere", "are",
+                "around", "as",  "at", "back","be","became",
+                "because","become","becomes", "becoming",
+                "been", "before", "beforehand", "behind",
+                "being", "below", "beside", "besides", "between",
+                "beyond", "bill", "both", "bottom","but", "by",
+                "call", "can", "cannot", "cant", "co", "con",
+                "could", "couldnt", "cry", "de", "describe",
+                "detail", "do", "done", "down", "due", "during",
+                "each", "eg", "eight", "either", "eleven", "else",
+                "elsewhere", "empty", "enough", "etc", "even",
+                "ever", "every", "everyone", "everything",
+                "everywhere", "except", "few", "fifteen",
+                "fify", "fill", "find", "fire", "first",
+                "five", "for", "former", "formerly", "forty",
+                "found", "four", "from", "front", "full",
+                "further", "get", "give", "go", "had", "has",
+                "hasnt", "have", "he", "hence", "her", "here",
+                "hereafter", "hereby", "herein", "hereupon",
+                "hers", "herself", "him", "himself", "his",
+                "how", "however", "hundred", "ie", "if", "in",
+                "inc", "indeed", "interest", "into", "is", "it",
+                "its", "itself", "keep", "last", "latter",
+                "latterly", "least", "less", "ltd", "made", "many",
+                "may", "me", "meanwhile", "might", "mill", "mine",
+                "more", "moreover", "most", "mostly", "move", "much",
+                "must", "my", "myself", "name", "namely", "neither",
+                "never", "nevertheless", "next", "nine", "no", "nobody",
+                "none", "noone", "nor", "not", "nothing", "now",
+                "nowhere", "of", "off", "often", "on", "once", "one",
+                "only", "onto", "or", "other", "others", "otherwise",
+                "our", "ours", "ourselves", "out", "over", "own","part",
+                "per", "perhaps", "please", "put", "rather", "re", "same",
+                "see", "seem", "seemed", "seeming", "seems", "serious",
+                "several", "she", "should", "show", "side", "since",
+                "sincere", "six", "sixty", "so", "some", "somehow",
+                "someone", "something", "sometime", "sometimes",
+                "somewhere", "still", "such", "system", "take",
+                "ten", "than", "that", "the", "their", "them",
+                "themselves", "then", "thence", "there", "thereafter",
+                "thereby", "therefore", "therein", "thereupon",
+                "these", "they", "thickv", "thin", "third",
+                "this", "those", "though", "three", "through",
+                "throughout", "thru", "thus", "to", "together",
+                "too", "top", "toward", "towards", "twelve",
+                "twenty", "two", "un", "under", "until", "up",
+                "upon", "us", "very", "via", "was", "we", "well",
+                "were", "what", "whatever", "when", "whence",
+                "whenever", "where", "whereafter", "whereas",
+                "whereby", "wherein", "whereupon", "wherever",
+                "whether", "which", "while", "whither", "who",
+                "whoever", "whole", "whom", "whose", "why", "will",
+                "with", "within", "without", "would", "yet", "you",
+                "your", "yours", "yourself", "yourselves", "the"]
+
 def test_oauth():
     ''' Helper function that returns an HTTP 200 OK response code and a
     representation of the requesting user if authentication was
@@ -167,8 +228,8 @@ def make_request_with_cache(baseurl, hashtag, count):
         return CACHE_DICT[request_key]
 
 
-def find_most_common_cooccurring_hashtag(tweet_data, hashtag_to_ignore):
-    ''' Finds the hashtag that most commonly co-occurs with the hashtag
+def find_top3_common_cooccurring_hashtag(tweet_data, hashtag_to_ignore):
+    ''' Finds the hashtag that top 3 commonly co-occurs with the hashtag
     queried in make_request_with_cache().
 
     Parameters
@@ -181,23 +242,33 @@ def find_most_common_cooccurring_hashtag(tweet_data, hashtag_to_ignore):
 
     Returns
     -------
-    string
-        the hashtag that most commonly co-occurs with the hashtag
-        queried in make_request_with_cache()
+    None
+    print out the top3 common co-occuring hashtag if they are found.
 
     '''
     # TODO: Implement function
     hashtag_list = []
     for tweet in tweet_data['statuses']:
-        for hashtag in tweet['entities']['hashtags']:
-            hashtag_list.append(hashtag['text'].lower())
+        for hashtag_find in tweet['entities']['hashtags']:
+            hashtag_list.append(hashtag_find['text'].lower())
     c = Counter(hashtag_list)
-    # Check if the top hash tag is not hashtag we want to find
-    if c.most_common()[1][0] == hashtag_to_ignore[1:].lower():
-        return '#' + c.most_common()[0][0]
+    # check whether there is cooccuring hashtag
+    if len(c.most_common()) < 2:
+        print(f"There is no cooccuring hashtag with {hashtag_to_ignore}.")
     else:
-        return '#' + c.most_common()[1][0]
-
+        hashtag_list = []
+        for hashtag_co, _ in c.most_common():
+            if hashtag_co == hashtag_to_ignore[1:].lower():
+                pass
+            else:
+                hashtag_list.append(hashtag_co)
+            if len(hashtag_list) == 3:
+                break
+        # Care when there are hashtags less than 3.
+        print(f"The top {len(hashtag_list)} most commonly co-occuring ",
+                f"hashtags with {hashtag_to_ignore}:")
+        for tag in hashtag_list:
+            print(tag)
     ''' Hint: In case you're confused about the hashtag_to_ignore
     parameter, we want to ignore the hashtag we queried because it would
     definitely be the most occurring hashtag, and we're trying to find
@@ -207,6 +278,7 @@ def find_most_common_cooccurring_hashtag(tweet_data, hashtag_to_ignore):
 
 
 if __name__ == "__main__":
+    # This is for just checking
     if not client_key or not client_secret:
         print("You need to fill in CLIENT_KEY and CLIENT_SECRET in secret_data.py.")
         exit()
@@ -217,9 +289,23 @@ if __name__ == "__main__":
     CACHE_DICT = open_cache()
 
     baseurl = "https://api.twitter.com/1.1/search/tweets.json"
-    hashtag = "#MarchMadness2021"
     count = 100
+    initial_comment = 'Please enter a hashtag(#***) you want to search, '
+    initial_comment += 'or "exit" to quit: '
 
-    tweet_data = make_request_with_cache(baseurl, hashtag, count)
-    most_common_cooccurring_hashtag = find_most_common_cooccurring_hashtag(tweet_data, hashtag)
-    print("The most commonly cooccurring hashtag with {} is {}.".format(hashtag, most_common_cooccurring_hashtag))
+    while True:
+        hashtag = input(initial_comment)
+        if hashtag == 'exit':
+            print("Bye!")
+            break
+        # To check whether the input is hashtag or not
+        if hashtag[0] != '#':
+            print('Hashtag must start from "#", please re-enter a hashtag.')
+        else:
+            tweet_data = make_request_with_cache(baseurl, hashtag, count)
+            if len(tweet_data['statuses']) == 0:
+                print("No results fetched, your hashtag may be nonsense.")
+                print("Please reconsider a hashtag.")
+            else:
+                find_top3_common_cooccurring_hashtag(tweet_data, hashtag)
+        print()
