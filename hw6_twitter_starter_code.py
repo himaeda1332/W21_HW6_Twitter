@@ -99,9 +99,12 @@ def construct_unique_key(baseurl, params):
         the unique key as a string
     '''
     #TODO Implement function
-    unique_key = baseurl
-    for k, v in params.items():
-        unique_key += '_' + k + '_' + str(v)
+    param_strings = []
+    connector = '_'
+    for k in params.keys():
+        param_strings.append(f'{k}_{params[k]}')
+    param_strings.sort()
+    unique_key = baseurl + connector +  connector.join(param_strings)
     return unique_key
 
 
@@ -190,13 +193,12 @@ def find_most_common_cooccurring_hashtag(tweet_data, hashtag_to_ignore):
     hashtag_list = []
     for tweet in tweet_data['statuses']:
         for hashtag in tweet['entities']['hashtags']:
-            hashtag_list.append(hashtag['text'].lower())
+            hashtag_list.append("#" + hashtag['text'].lower())
     c = Counter(hashtag_list)
+    # Ignore the searched hashtag
+    c[hashtag_to_ignore.lower()] = 0
     # Check if the top hash tag is not hashtag we want to find
-    if c.most_common()[1][0] == hashtag_to_ignore[1:].lower():
-        return '#' + c.most_common()[0][0]
-    else:
-        return '#' + c.most_common()[1][0]
+    return c.most_common()[0][0]
 
     ''' Hint: In case you're confused about the hashtag_to_ignore
     parameter, we want to ignore the hashtag we queried because it would
