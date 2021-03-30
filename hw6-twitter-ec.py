@@ -110,31 +110,29 @@ def find_top3_cooccurring_hashtag_and_10words(tweet_data, hashtag_to_ignore):
     words_list = []
     for tweet in tweet_data['statuses']:
         for hashtag_find in tweet['entities']['hashtags']:
-            hashtag_list.append(hashtag_find['text'].lower())
+            hashtag_list.append("#" + hashtag_find['text'].lower())
         for word in tweet['text'].split(): # split text into word
             # remove stopwords and RT
             if word.lower() not in stopwords and\
                 word.lower()[0] != "#" and word.lower()[0] != "@":
                 words_list.append(word.lower())
     c_hashtag = Counter(hashtag_list)
+    c_hashtag[hashtag_to_ignore.lower()] = 0
     c_words = Counter(words_list)
 
     # check whether there is cooccuring hashtag
     if len(c_hashtag.most_common()) < 2:
         print(f"There is no cooccuring hashtag with {hashtag_to_ignore}.")
     else:
-        hashtag_list = []
+        cohashtag_list = []
         for hashtag_co, _ in c_hashtag.most_common():
-            if hashtag_co == hashtag_to_ignore[1:].lower():
-                pass
-            else:
-                hashtag_list.append(hashtag_co)
-            if len(hashtag_list) == 3:
+            cohashtag_list.append(hashtag_co)
+            if len(cohashtag_list) == 3:
                 break
         # Care when there are hashtags less than 3.
-        print(f"The top {len(hashtag_list)} most commonly co-occuring ",
+        print(f"The top {len(cohashtag_list)} most commonly co-occuring ",
                 f"hashtags with {hashtag_to_ignore}:")
-        for tag in hashtag_list:
+        for tag in cohashtag_list:
             print(tag)
         print()
         print("The top 10 most commonly occurring words in the 100 tweets:")
@@ -217,9 +215,12 @@ def construct_unique_key(baseurl, params):
         the unique key as a string
     '''
     #TODO Implement function
-    unique_key = baseurl
-    for k, v in params.items():
-        unique_key += '_' + k + '_' + str(v)
+    param_strings = []
+    connector = '_'
+    for k in params.keys():
+        param_strings.append(f'{k}_{params[k]}')
+    param_strings.sort()
+    unique_key = baseurl + connector +  connector.join(param_strings)
     return unique_key
 
 
@@ -307,24 +308,23 @@ def find_top3_common_cooccurring_hashtag(tweet_data, hashtag_to_ignore):
     hashtag_list = []
     for tweet in tweet_data['statuses']:
         for hashtag_find in tweet['entities']['hashtags']:
-            hashtag_list.append(hashtag_find['text'].lower())
+            hashtag_list.append("#" + hashtag_find['text'].lower())
     c = Counter(hashtag_list)
+    # Ignore the searched hashtag
+    c[hashtag_to_ignore.lower()] = 0
     # check whether there is cooccuring hashtag
     if len(c.most_common()) < 2:
         print(f"There is no cooccuring hashtag with {hashtag_to_ignore}.")
     else:
-        hashtag_list = []
+        cohashtag_list = []
         for hashtag_co, _ in c.most_common():
-            if hashtag_co == hashtag_to_ignore[1:].lower():
-                pass
-            else:
-                hashtag_list.append(hashtag_co)
-            if len(hashtag_list) == 3:
+            cohashtag_list.append(hashtag_co)
+            if len(cohashtag_list) == 3:
                 break
         # Care when there are hashtags less than 3.
-        print(f"The top {len(hashtag_list)} most commonly co-occuring ",
+        print(f"The top {len(cohashtag_list)} most commonly co-occuring ",
                 f"hashtags with {hashtag_to_ignore}:")
-        for tag in hashtag_list:
+        for tag in cohashtag_list:
             print(tag)
     ''' Hint: In case you're confused about the hashtag_to_ignore
     parameter, we want to ignore the hashtag we queried because it would
